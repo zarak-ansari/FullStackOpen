@@ -5,6 +5,7 @@ sequenceDiagram
 
     browser->>server: POST https://studies.cs.helsinki.fi/exampleapp/new_note
     activate server
+    Note right of browser: POST request contains content of the note and the timestamp
     server-->>browser: 302 Redirect to https://studies.cs.helsinki.fi/exampleapp/notes
     deactivate server
 
