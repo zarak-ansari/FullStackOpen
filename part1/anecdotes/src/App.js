@@ -27,6 +27,7 @@ const App = () => {
     newVotes[selected] = newVotes[selected] + 1
     setVotes(newVotes)
     if (newVotes[selected] > newVotes[topAnecdoteIndex]) setTopAnecdoteIndex(selected)
+
   }
   return (
     <div>
