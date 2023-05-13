@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-// import axios from 'axios'
-import { getAll, create } from './components/personsService'
+import personsService from './personsService'
 
 const PersonForm = ({ name, changeName, newNumber, changeNumber, addNewName }) => {
   return (
@@ -26,7 +25,8 @@ const PersonForm = ({ name, changeName, newNumber, changeNumber, addNewName }) =
 
 const Filter = ({ searchInput, setSearchInput }) => <input value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
 
-const Person = ({ person }) => <p key={person.id}>{person.name} {person.number} <button>delete</button></p>
+const Person = ({ person, deletePerson }) => <p key={person.id}>{person.name} {person.number} <button onClick={() => deletePerson(person)}>delete</button></p>
+
 
 const App = () => {
 
@@ -38,32 +38,51 @@ const App = () => {
   const [searchInput, setSearchInput] = useState('')
 
   useEffect(() => {
-    const initialPersons = getAll()
-    setPersons(initialPersons)
+    personsService
+      .getAll()
+      .then(initialPersons => setPersons(initialPersons))
   }
     , []
   )
 
-  const addNewName = (event) => {
+  const addNewPerson = (event) => {
     event.preventDefault()
 
-    const alreadyInPhoneBook = persons.reduce((isInPhoneBook, person) => person.name === newName || isInPhoneBook, false)
+    const personWithSameName = persons.find(person => person.name === newName)
 
-    if (alreadyInPhoneBook) {
-      alert(`${newName} is already added to phonebook.`)
+    if (personWithSameName) {
+      const userWantsToUpdate = window.confirm(`${newName} is already added to phonebook. Replace the old number with a new one?`)
+      if (userWantsToUpdate) {
+        const updatedPerson = {
+          ...personWithSameName,
+          number: newNumber
+        }
+        personsService
+          .updatePerson(personWithSameName.id, updatedPerson)
+          .then(updatedPersonReceived => setPersons(persons.map(person => person.id !== updatedPersonReceived.id ? person : updatedPersonReceived)))
+      }
     } else {
       const newPerson = {
         name: newName,
         number: newNumber,
       }
 
-      const personCreatedOnServer = create(newPerson)
-      setPersons(persons.concat(personCreatedOnServer))
+      personsService
+        .create(newPerson)
+        .then(createdPerson => setPersons(persons.concat(createdPerson)))
     }
   }
 
+  const deletePerson = person => {
+    const confirmed = window.confirm(`Do you want to delete ${person.name}?`)
+    if (confirmed) {
+      personsService
+        .deletePerson(person.id)
+        .then(setPersons(persons.filter(personInList => personInList.id !== person.id)))
+    }
+  }
 
-  const personsToShow = persons.filter(person => person.name.toLowerCase().includes(searchInput.toLowerCase()))
+  const personsToShow = persons.length > 0 ? persons.filter(person => person.name.toLowerCase().includes(searchInput.toLowerCase())) : []
 
   return (
     <div>
@@ -81,10 +100,10 @@ const App = () => {
         changeName={setNewName}
         newNumber={newNumber}
         changeNumber={setNewNumber}
-        addNewName={addNewName}
+        addNewName={addNewPerson}
       />
       <h2>Numbers</h2>
-      {personsToShow.map(person => <Person key={person.id} person={person} />)}
+      {personsToShow.map(person => <Person key={person.id} person={person} deletePerson={deletePerson} />)}
     </div>
   )
 }
