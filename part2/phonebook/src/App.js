@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import personsService from './personsService'
+import personsService from './components/personsService'
 
 const PersonForm = ({ name, changeName, newNumber, changeNumber, addNewName }) => {
   return (
@@ -27,6 +27,33 @@ const Filter = ({ searchInput, setSearchInput }) => <input value={searchInput} o
 
 const Person = ({ person, deletePerson }) => <p key={person.id}>{person.name} {person.number} <button onClick={() => deletePerson(person)}>delete</button></p>
 
+const notificationStyles = {
+  color: 'green',
+  background: 'lightgrey',
+  fontSize: 20,
+  borderStyle: 'solid',
+  borderRadius: 5,
+  padding: 10,
+  marginBottom: 10
+}
+const errorStyles = {
+  ...notificationStyles,
+  color: 'red'
+}
+
+const Notification = ({ message }) => {
+
+  if (message === null) return <div></div>
+
+  return <div style={notificationStyles}>{message}</div>
+}
+
+const ErrorNotification = ({ errorMessage }) => {
+  if (errorMessage === null) return <div></div>
+
+  return <div style={errorStyles}>{errorMessage}</div>
+
+}
 
 const App = () => {
 
@@ -36,6 +63,9 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchInput, setSearchInput] = useState('')
+  const [notificationMessage, setNotificationMessage] = useState(null)
+  const [errorMessage, setErrorMessage] = useState(null)
+
 
   useEffect(() => {
     personsService
@@ -44,6 +74,16 @@ const App = () => {
   }
     , []
   )
+
+  const displayNotification = (message) => {
+    setNotificationMessage(message)
+    setTimeout(() => setNotificationMessage(null), 5000)
+  }
+
+  const displayErrorNotification = (errorMessage) => {
+    setErrorMessage(errorMessage)
+    setTimeout(() => setErrorMessage(null), 5000)
+  }
 
   const addNewPerson = (event) => {
     event.preventDefault()
@@ -60,13 +100,17 @@ const App = () => {
         personsService
           .updatePerson(personWithSameName.id, updatedPerson)
           .then(updatedPersonReceived => setPersons(persons.map(person => person.id !== updatedPersonReceived.id ? person : updatedPersonReceived)))
+          .catch(err => {
+            displayErrorNotification(`Information for ${updatedPerson.name} has already been removed from server`)
+          })
+
       }
     } else {
       const newPerson = {
         name: newName,
         number: newNumber,
       }
-
+      displayNotification(`Added ${newPerson.name}`)
       personsService
         .create(newPerson)
         .then(createdPerson => setPersons(persons.concat(createdPerson)))
@@ -79,6 +123,9 @@ const App = () => {
       personsService
         .deletePerson(person.id)
         .then(setPersons(persons.filter(personInList => personInList.id !== person.id)))
+        .catch(err => {
+          displayErrorNotification(`Information for ${person.name} already removed from server`)
+        })
     }
   }
 
@@ -87,11 +134,11 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
-
+      <Notification message={notificationMessage} />
+      <ErrorNotification errorMessage={errorMessage} />
       <div>
         filter shown with :
         <Filter searchInput={searchInput} setSearchInput={setSearchInput} />
-
       </div>
 
       <h2>add a new</h2>
