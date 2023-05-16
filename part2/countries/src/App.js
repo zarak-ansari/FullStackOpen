@@ -1,6 +1,7 @@
 import './App.css';
 import countriesService from './components/countriesService'
 import weatherService from './components/weatherService'
+import weatherCodesToImageLinks from "./components/weatherCodesToImageLinks.json"
 import { useState, useEffect } from 'react'
 
 
@@ -62,11 +63,17 @@ const WeatherInfo = ({ capital, capitalInfo }) => {
       <div>
         <h2>{`Weather for ${capital}`}</h2>
         <p>{`current temp: ${weatherData.current_weather.temperature}`}</p>
+        <img style={{ backgroundColor: 'black' }} src={getWeatherIcon(weatherData.current_weather.is_day, weatherData.current_weather.weathercode)} alt="current weather" />
         <p>{`wind speed: ${weatherData.current_weather.windspeed}`}</p>
       </div>
     )
   }
 }
+
+const getWeatherIcon = (isDay, weatherCode) => {
+  return isDay === 0 ? weatherCodesToImageLinks[weatherCode].night.image : weatherCodesToImageLinks[weatherCode].day.image  
+}
+
 
 function App() {
 
