@@ -4,29 +4,28 @@ import weatherService from './components/weatherService'
 import { useState, useEffect } from 'react'
 
 
-const DisplayCountryNames = ({countriesToDisplay, selectedCountry, setSelectedCountry}) => {
+const DisplayCountryNames = ({ countriesToDisplay, selectedCountry, setSelectedCountry }) => {
 
-  if(countriesToDisplay.length === 0) {
+  if (countriesToDisplay.length === 0) {
     return <div></div>
-  } else if(countriesToDisplay.length === 1){
-    return <CountryData country={countriesToDisplay[0]} /> 
-  } else if(countriesToDisplay.length >10) {
+  } else if (countriesToDisplay.length === 1) {
+    return <CountryData country={countriesToDisplay[0]} />
+  } else if (countriesToDisplay.length > 10) {
     return <div>Too Many Countries to Display</div>
   } else {
-    return selectedCountry ? <CountryData country={selectedCountry} /> : <ul>{countriesToDisplay.map(country => <li key={country.cca3}>{country.name.common} <button onClick={(e)=>setSelectedCountry(country)}>show</button></li>)}</ul>
+    return selectedCountry ? <CountryData country={selectedCountry} /> : <ul>{countriesToDisplay.map(country => <li key={country.cca3}>{country.name.common} <button onClick={(e) => setSelectedCountry(country)}>show</button></li>)}</ul>
   }
 }
 
-const CountryData = ({country}) => {
-  console.log(country)
+const CountryData = ({ country }) => {
   return (
     <div>
       <h1>{country.name.common}</h1>
 
       <p>{`capital: ${country.capital[0]}`}</p>
       <p>{`area: ${country.area}`}</p>
-      
-      
+
+
       <h2>Languages</h2>
       <Languages languagesObj={country.languages} />
       <FlagPicture flagObj={country.flags} />
@@ -35,35 +34,38 @@ const CountryData = ({country}) => {
   )
 }
 
-const Languages = ({languagesObj}) => {
+const Languages = ({ languagesObj }) => {
   const languagesArray = []
-  for (const [key, value] of Object.entries(languagesObj)){
+  for (const [key, value] of Object.entries(languagesObj)) {
     languagesArray.push(value)
   }
   return <ul>{languagesArray.map(lang => <li key={lang}>{lang}</li>)}</ul>
 }
 
-const FlagPicture = ({flagObj}) => {
+const FlagPicture = ({ flagObj }) => {
   return <img src={flagObj.png} alt={flagObj.alt} />
 }
 
-const WeatherInfo = ({capital, capitalInfo}) => {
+const WeatherInfo = ({ capital, capitalInfo }) => {
   const [weatherData, setWeatherData] = useState(null)
-  
+
   useEffect(() => {
     weatherService
-    .getWeatherData(capitalInfo)
-    .then(response => setWeatherData(response))
-  },[])
-  console.log(weatherData)
+      .getWeatherData(capitalInfo)
+      .then(response => setWeatherData(response))
+  }, [])
 
-  return (
-    <div>
-      <h2>{`Weather for ${capital}`}</h2>
-      <p>{`current temp: ${weatherData.current_weather.temperature}`}</p>
-      <p>{`wind speed: ${weatherData.current_weather.windspeed}`}</p>
-    </div>
-  )
+  if (!weatherData) {
+    return <div></div>
+  } else {
+    return (
+      <div>
+        <h2>{`Weather for ${capital}`}</h2>
+        <p>{`current temp: ${weatherData.current_weather.temperature}`}</p>
+        <p>{`wind speed: ${weatherData.current_weather.windspeed}`}</p>
+      </div>
+    )
+  }
 }
 
 function App() {
